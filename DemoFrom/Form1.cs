@@ -9,17 +9,20 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Demo.Interface;
 using Demo.Model;
+using log4net;
+
 namespace DemoFrom
 {
     public partial class Form1 : Form
     {
+        private readonly ILog _log = LogManager.GetLogger(typeof(Form1));
         Timer timer = new Timer();
         ISwPackageWeight swExport = Program.context.GetProxyObject<ISwPackageWeight>();
         public Form1()
         {
             InitializeComponent();
             timer.Tick += Timer_Tick;
-            timer.Interval = 100;
+            timer.Interval = 1300;
 
         }
 
@@ -27,14 +30,23 @@ namespace DemoFrom
         {
             Task.Run(() =>
             {
-                swExport.Insert(new SwPackageWeight() { Guid = Guid.NewGuid().ToString().Replace("-", ""), CardId = "1234", TotalWeight = 200, CreateDate = DateTime.Now });
-                List<SwPackageWeight> swPackageWeights = swExport.GetSwPackageWeights();
-                if (dataGridView1.IsHandleCreated)
+                try
                 {
-                    dataGridView1.BeginInvoke((EventHandler)delegate
+                    swExport.Insert(new SwPackageWeight() { Guid = Guid.NewGuid().ToString().Replace("-", ""), CardId = "1234", TotalWeight = 200, CreateDate = DateTime.Now });
+                    List<SwPackageWeight> swPackageWeights = swExport.GetSwPackageWeights();
+                    if (dataGridView1.IsHandleCreated)
                     {
-                        dataGridView1.DataSource = swPackageWeights;
-                    });
+                        dataGridView1.BeginInvoke((EventHandler)delegate
+                        {
+                            dataGridView1.DataSource = swPackageWeights;
+                            label1.Text = swPackageWeights.Count.ToString();
+                        });
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _log.Error(ex);
                 }
 
             });

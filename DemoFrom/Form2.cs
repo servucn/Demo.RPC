@@ -1,5 +1,6 @@
 ﻿using Demo.Interface;
 using Demo.Model;
+using log4net;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -15,6 +16,7 @@ namespace DemoFrom
 {
     public partial class Form2 : Form
     {
+        private readonly ILog _log = LogManager.GetLogger(typeof(Form2));
         System.Timers.Timer timer = new System.Timers.Timer();
         ISwExportFinish swExport = Program.context.GetProxyObject<ISwExportFinish>();
         public Form2()
@@ -28,15 +30,22 @@ namespace DemoFrom
 
             Task.Run(() =>
             {
-                swExport.Insert(new SwExportFinish() { Guid = Guid.NewGuid().ToString().Replace("-", ""), CardId = "1234", ActNumber = 10, FinishTime = DateTime.Now, GoalNumber = 10 });
-                List<SwExportFinish> swExportFinishes = swExport.GetSwExportFinishs();
-                if (dataGridView1.IsHandleCreated)
+                try
                 {
-                    dataGridView1.BeginInvoke((EventHandler)delegate
+                    swExport.Insert(new SwExportFinish() { Guid = Guid.NewGuid().ToString().Replace("-", ""), CardId = "1234", ActNumber = 10, FinishTime = DateTime.Now, GoalNumber = 10 });
+                    List<SwExportFinish> swExportFinishes = swExport.GetSwExportFinishs();
+                    if (dataGridView1.IsHandleCreated)
                     {
-                        dataGridView1.DataSource = swExportFinishes;
+                        dataGridView1.BeginInvoke((EventHandler)delegate
+                        {
+                            dataGridView1.DataSource = swExportFinishes;
 
-                    });
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _log.Error(ex);
                 }
             });
 
